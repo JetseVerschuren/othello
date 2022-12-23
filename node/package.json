@@ -1,0 +1,12 @@
+{
+  "name": "othello-node",
+  "version": "1.0.0",
+  "description": "Othello client for M2 with native AI calculations",
+  "main": "index.js",
+  "author": "Jetse Verschuren",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^5.0.0"
+  }
+}
