@@ -10,6 +10,5 @@ console.log(example.GetValue())
 example.SetValue(19)
 console.log(example.GetValue());
 console.log(example.applyMove());
-console.log(example.determineMove());
 console.log(example.getBoard());
-// It prints 19
+example.determineMove().then(console.log);
