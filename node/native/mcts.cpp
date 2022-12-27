@@ -2,6 +2,7 @@
 #include <thread>
 #include <atomic>
 #include "othello.hpp"
+#include "node.hpp"
 
 class MCTS : public Napi::ObjectWrap<MCTS> {
 public:
@@ -12,12 +13,6 @@ public:
     static Napi::Value CreateNewItem(const Napi::CallbackInfo &info);
 
 private:
-    double _value;
-
-    Napi::Value GetValue(const Napi::CallbackInfo &info);
-
-    Napi::Value SetValue(const Napi::CallbackInfo &info);
-
     std::atomic<bool> thread_running = {false};
 
     void ApplyMove(const Napi::CallbackInfo &info);
@@ -30,10 +25,6 @@ private:
 Napi::Object MCTS::Init(Napi::Env env, Napi::Object exports) {
     // This method is used to hook the accessor and method callbacks
     Napi::Function func = DefineClass(env, "MCTS", {
-            InstanceMethod<&MCTS::GetValue>("GetValue",
-                                            static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-            InstanceMethod<&MCTS::SetValue>("SetValue",
-                                            static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
             InstanceMethod<&MCTS::ApplyMove>("applyMove",
                                              static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
             InstanceMethod<&MCTS::DetermineMove>("determineMove", static_cast<napi_property_attributes>(napi_writable |
@@ -65,26 +56,7 @@ Napi::Object MCTS::Init(Napi::Env env, Napi::Object exports) {
     return exports;
 }
 
-MCTS::MCTS(const Napi::CallbackInfo &info) :
-        Napi::ObjectWrap<MCTS>(info) {
-    Napi::Env env = info.Env();
-    // ...
-    Napi::Number value = info[0].As<Napi::Number>();
-    this->_value = value.DoubleValue();
-}
-
-Napi::Value MCTS::GetValue(const Napi::CallbackInfo &info) {
-    Napi::Env env = info.Env();
-    return Napi::Number::New(env, this->_value);
-}
-
-Napi::Value MCTS::SetValue(const Napi::CallbackInfo &info) {
-    Napi::Env env = info.Env();
-    // ...
-    Napi::Number value = info[0].As<Napi::Number>();
-    this->_value = value.DoubleValue();
-    return this->GetValue(info);
-}
+MCTS::MCTS(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MCTS>(info) {}
 
 void MCTS::ApplyMove(const Napi::CallbackInfo &info) {
     Napi::Env env = info.Env();

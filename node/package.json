@@ -7,6 +7,32 @@
   "license": "UNLICENSED",
   "dependencies": {
     "bindings": "^1.5.0",
-    "node-addon-api": "^5.0.0"
+    "express": "^4.18.2",
+    "node-addon-api": "^5.0.0",
+    "ws": "^8.11.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.15",
+    "@types/node": "^18.11.18",
+    "@types/ws": "^8.5.3",
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
+    "eslint": "^8.30.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.8.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.9.4"
+  },
+  "scripts": {
+    "start": "npm-run-all build prod",
+    "build": "tsc",
+    "prod": "node build/index.js",
+    "dev": "NODE_ENV=development ts-node-dev --respawn --deps --rs src/index.ts",
+    "lint": "npm-run-all lint:*",
+    "lint:prettier": "prettier --check .",
+    "lint:eslint": "eslint --quiet src/",
+    "autoformat": "npm-run-all autoformat:*",
+    "autoformat:prettier": "prettier --write .",
+    "autoformat:eslint": "eslint --fix --quiet src/"
   }
 }

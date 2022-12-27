@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <script>
+      const socket = new WebSocket("ws://localhost:8080");
+
+      socket.onopen = function (e) {
+        console.log("[open] Connection established");
+      };
+
+      socket.onmessage = (event) => {
+        console.log(`[message] Data received from server: ${event.data}`);
+      };
+
+      function send(a) {
+        socket.send(JSON.stringify(a));
+      }
+    </script>
+  </head>
+  <body>
+    <button onclick="send({command: 'connect', host: 'localhost', port: 55555});">Connect</button><br />
+  </body>
+</html>

@@ -1,14 +1,35 @@
 #include <vector>
 
+const int8_t directions[4] = {1, 7, 8, 9};
+
 class Othello {
 public:
     Othello();
 
     std::vector<int8_t> ToVector();
+
+    static int popcount64c(uint64_t x);
+
+    uint64_t GetValidMoves();
+
+    void DoMove(uint8_t move);
+
+    void DoMove(uint8_t move, Othello *target);
+
 private:
     uint64_t ValidMoves();
 
-    uint64_t a,b;
+    uint64_t moves_down(uint8_t direction);
+
+    uint64_t moves_up(uint8_t increment);
+
+    uint64_t flips_up(uint64_t move, uint8_t increment);
+
+    uint64_t flips_down(const uint64_t move, const uint8_t increment);
+
+    uint64_t get_flips(uint8_t move);
+
+    uint64_t a, b;
     bool skip;
 };
 
@@ -23,9 +44,9 @@ std::vector<int8_t> Othello::ToVector() {
     out.reserve(64);
     uint64_t p = a, q = b, valid_moves = ValidMoves();
     for (size_t i = 0; i < 64; i++) {
-        if(p & 1) out.push_back(1);
-        else if(q & 1) out.push_back(2);
-        else if(valid_moves & 1) out.push_back(0);
+        if (p & 1) out.push_back(1);
+        else if (q & 1) out.push_back(2);
+        else if (valid_moves & 1) out.push_back(0);
         else out.push_back(-1);
         p >>= 1;
         q >>= 1;
@@ -37,3 +58,117 @@ std::vector<int8_t> Othello::ToVector() {
 uint64_t Othello::ValidMoves() {
     return 0;
 }
+
+// https://en.wikipedia.org/wiki/Hamming_weight
+int Othello::popcount64c(uint64_t x) {
+    const uint64_t m1 = 0x5555555555555555; //binary: 0101...
+    const uint64_t m2 = 0x3333333333333333; //binary: 00110011..
+    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
+    const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
+    x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
+    x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
+    x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
+    return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+}
+
+/*
+Get all possible moves that enclose opposite pieces, in the direction that
+increases the index, so left, up, up-left, up-right. This checks in reverse,
+so from end piece to empty spot, which means the internal shift is increasing.
+Because it's impossible to enclose pieces to the right from the right edge,
+we use the right edge as separating row.
+*/
+uint64_t Othello::moves_down(uint8_t increment) {
+    uint64_t valid = 0;
+    uint64_t empty = ~(a | b);
+    uint64_t candidates = b & (a << increment);
+    while (candidates != 0) {
+        valid |= empty & (candidates << increment) & ~0x0101010101010101;
+        candidates = b & (candidates << increment) & ~0x0101010101010101;
+    }
+    return valid;
+}
+
+// Get all possible moves that increases the index: right, down, down-left, down-right
+uint64_t Othello::moves_up(uint8_t increment) {
+    uint64_t valid = 0;
+    uint64_t empty = ~(a | b);
+    uint64_t candidates = b & (a >> increment);
+    while (candidates != 0) {
+        valid |= empty & (candidates >> increment) & ~0x8080808080808080;
+        candidates = b & (candidates >> increment) & ~0x8080808080808080;
+    }
+    return valid;
+}
+
+/*
+A move is only valid if it outflanks at least one piece of the opponent.
+Of course, you can't place a piece on a field that's already occupied.
+Because outflanking requires adjacency, we can already rule out any field
+that doesn't have any adjacent marks of the opponent.
+
+This function is hardcoded to check for the black player, but switching the
+inputs is enough to check for the other player.
+*/
+uint64_t Othello::GetValidMoves() {
+    uint64_t valid = 0;
+    for (int8_t direction: directions) {
+        valid |= moves_up(direction);
+        valid |= moves_down(direction);
+    }
+    return valid;
+}
+
+uint64_t Othello::flips_up(uint64_t move, uint8_t increment) {
+    uint64_t candidates = b & (move << increment);
+    uint64_t empty = ~(a | b);
+    uint64_t flips = candidates;
+    while (candidates != 0) {
+        // If we hit an empty spot, it's not enclosed,
+        // and thus nothing should be flipped
+        if ((empty | 0x0101010101010101) & (candidates << increment)) return 0;
+        // If we hit one of our pieces, it's enclosed,
+        // and we should return the bits
+        if (a & (candidates << increment)) return candidates;
+
+        candidates = b & (candidates << increment);
+        flips |= candidates;
+    }
+    return 0;
+}
+
+uint64_t Othello::flips_down(const uint64_t move, const uint8_t increment) {
+    uint64_t candidates = b & (move >> increment);
+    uint64_t empty = ~(a | b);
+    uint64_t flips = candidates;
+    while (candidates != 0) {
+        if ((empty | 0x8080808080808080) & (candidates >> increment)) return 0;
+        if (a & (candidates >> increment)) return candidates;
+        candidates = b & (candidates << increment);
+        flips |= candidates;
+    }
+    return 0;
+}
+
+uint64_t Othello::get_flips(uint8_t move) {
+    uint64_t valid = 0;
+    uint64_t move_mask = 1L << move;
+    for (int8_t direction: directions) {
+        valid |= flips_up(move_mask, direction);
+        valid |= flips_down(move_mask, direction);
+    }
+    return valid | move_mask;
+}
+
+void Othello::DoMove(uint8_t move) {
+    uint64_t flips = get_flips(move);
+    uint64_t c = a;
+    a = b & ~flips;
+    b = a | flips;
+}
+
+void Othello::DoMove(uint8_t move, Othello *target) {
+    uint64_t flips = get_flips(move);
+    target->a = b & ~flips;
+    target->b = a | flips;
+};
