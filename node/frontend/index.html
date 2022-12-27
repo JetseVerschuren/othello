@@ -1,22 +1,16 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <script>
-      const socket = new WebSocket("ws://localhost:8080");
-
-      socket.onopen = function (e) {
-        console.log("[open] Connection established");
-      };
-
-      socket.onmessage = (event) => {
-        console.log(`[message] Data received from server: ${event.data}`);
-      };
-
-      function send(a) {
-        socket.send(JSON.stringify(a));
-      }
-    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="shortcut icon" type="image/ico" href="/src/assets/favicon.ico" />
+    <title>Solid App</title>
   </head>
   <body>
-    <button onclick="send({command: 'connect', host: 'localhost', port: 55555});">Connect</button><br />
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+    <script src="/src/index.tsx" type="module"></script>
   </body>
 </html>

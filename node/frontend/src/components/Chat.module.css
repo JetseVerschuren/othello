@@ -1,0 +1,26 @@
+.chat {
+    display: flex;
+    font-size: 14px;
+}
+
+.time {
+    color: #b7c5d1;
+    padding: 3px 3px 3px 10px;
+    width: 55px;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+.from {
+    padding: 3px 10px 3px 10px;
+    width: 134px;
+    text-align: right;
+    color: #b7c5d1;
+}
+
+.content {
+    padding: 3px 6px 3px 10px;
+    border-left: 1px solid #28333d;
+    color: #f3f3f3;
+    flex-grow: 1;
+}
