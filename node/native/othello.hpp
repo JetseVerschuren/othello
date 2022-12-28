@@ -27,20 +27,21 @@ private:
 
     uint64_t get_flips(uint8_t move);
 
-    uint64_t a, b;
+    uint64_t fields[2];
+    bool mark = 0;
     bool skip;
 };
 
 Othello::Othello() {
-    a = 0x0000000810000000;
-    b = 0x0000001008000000;
+    fields[mark] = 0x0000000810000000;
+    fields[!mark] = 0x0000001008000000;
     skip = false;
 }
 
 std::vector<int8_t> Othello::ToVector() {
     std::vector<int8_t> out;
     out.reserve(64);
-    uint64_t p = a, q = b, valid_moves = GetValidMoves();
+    uint64_t p = fields[0], q = fields[1], valid_moves = GetValidMoves();
     for (size_t i = 0; i < 64; i++) {
         if (p & 1) out.push_back(1);
         else if (q & 1) out.push_back(2);
@@ -74,11 +75,11 @@ we use the right edge as separating row.
 */
 uint64_t Othello::moves_down(uint8_t increment) {
     uint64_t valid = 0;
-    uint64_t empty = ~(a | b);
-    uint64_t candidates = b & (a << increment);
+    uint64_t empty = ~(fields[mark] | fields[!mark]);
+    uint64_t candidates = fields[!mark] & (fields[mark] << increment);
     while (candidates != 0) {
         valid |= empty & (candidates << increment) & ~0x0101010101010101;
-        candidates = b & (candidates << increment) & ~0x0101010101010101;
+        candidates = fields[!mark] & (candidates << increment) & ~0x0101010101010101;
     }
     return valid;
 }
@@ -86,11 +87,11 @@ uint64_t Othello::moves_down(uint8_t increment) {
 // Get all possible moves that increases the index: right, down, down-left, down-right
 uint64_t Othello::moves_up(uint8_t increment) {
     uint64_t valid = 0;
-    uint64_t empty = ~(a | b);
-    uint64_t candidates = b & (a >> increment);
+    uint64_t empty = ~(fields[mark] | fields[!mark]);
+    uint64_t candidates = fields[!mark] & (fields[mark] >> increment);
     while (candidates != 0) {
         valid |= empty & (candidates >> increment) & ~0x8080808080808080;
-        candidates = b & (candidates >> increment) & ~0x8080808080808080;
+        candidates = fields[!mark] & (candidates >> increment) & ~0x8080808080808080;
     }
     return valid;
 }
@@ -114,8 +115,8 @@ uint64_t Othello::GetValidMoves() {
 }
 
 uint64_t Othello::flips_up(uint64_t move, uint8_t increment) {
-    uint64_t candidates = b & (move << increment);
-    uint64_t empty = ~(a | b);
+    uint64_t candidates = fields[!mark] & (move << increment);
+    uint64_t empty = ~(fields[mark] | fields[!mark]);
     uint64_t flips = candidates;
     while (candidates != 0) {
         // If we hit an empty spot, it's not enclosed,
@@ -123,22 +124,22 @@ uint64_t Othello::flips_up(uint64_t move, uint8_t increment) {
         if ((empty | 0x0101010101010101) & (candidates << increment)) return 0;
         // If we hit one of our pieces, it's enclosed,
         // and we should return the bits
-        if (a & (candidates << increment)) return candidates;
+        if (fields[mark] & (candidates << increment)) return candidates;
 
-        candidates = b & (candidates << increment);
+        candidates = fields[!mark] & (candidates << increment);
         flips |= candidates;
     }
     return 0;
 }
 
 uint64_t Othello::flips_down(const uint64_t move, const uint8_t increment) {
-    uint64_t candidates = b & (move >> increment);
-    uint64_t empty = ~(a | b);
+    uint64_t candidates = fields[!mark] & (move >> increment);
+    uint64_t empty = ~(fields[mark] | fields[!mark]);
     uint64_t flips = candidates;
     while (candidates != 0) {
         if ((empty | 0x8080808080808080) & (candidates >> increment)) return 0;
-        if (a & (candidates >> increment)) return candidates;
-        candidates = b & (candidates << increment);
+        if (fields[mark] & (candidates >> increment)) return candidates;
+        candidates = fields[!mark] & (candidates << increment);
         flips |= candidates;
     }
     return 0;
@@ -155,14 +156,20 @@ uint64_t Othello::get_flips(uint8_t move) {
 }
 
 void Othello::DoMove(uint8_t move) {
-    uint64_t flips = get_flips(move);
-    uint64_t c = a;
-    a = b & ~flips;
-    b = c | flips;
+    if(move < 64) {
+        uint64_t flips = get_flips(move);
+        printf("flips: %ld\n", flips);
+        fields[mark] |= flips;
+        fields[!mark] &= ~flips;
+    }
+    mark = !mark;
 }
 
 void Othello::DoMove(uint8_t move, Othello *target) {
-    uint64_t flips = get_flips(move);
-    target->a = b & ~flips;
-    target->b = a | flips;
+    if(move < 64) {
+        uint64_t flips = get_flips(move);
+        target->fields[mark] = fields[mark] | flips;
+        target->fields[!mark] = fields[!mark] & ~flips;
+    }
+    target->mark = !mark;
 };

@@ -11,7 +11,7 @@ import { createStore } from "solid-js/store";
 const App: Component = () => {
   // const [clientState, setClientState] = useState();
   const [clientState, setClientState] = createStore<ClientState>({
-    board: [],
+    board: new Array(64).fill(-1),
     opponent: null,
     remoteServer: null,
   });
@@ -66,9 +66,9 @@ const App: Component = () => {
 
   const doMove = (move: number) => {
     console.log(`Clicked field ${move}`);
-    if(clientState.board?.[move] !== 0) return console.log("Invalid move");
-    sendMessage({command: "doMove", move});
-  }
+    if (clientState.board?.[move] !== 0) return console.log("Invalid move");
+    sendMessage({ command: "doMove", move });
+  };
 
   return (
     <div class={styles.App}>

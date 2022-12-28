@@ -8,7 +8,7 @@ export class WebsocketServer implements ClientListener {
   private client: Client | null = null;
   private wsServer: ws.Server;
   private state: ClientState = {
-    board: null,
+    board: new Array(64).fill(-1),
     opponent: null,
     remoteServer: null,
   };

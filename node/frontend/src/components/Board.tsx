@@ -1,8 +1,6 @@
 import styles from "./Board.module.css";
 import { Index, Show } from "solid-js";
 
-export const emptyBoard = new Array(64).fill(-1);
-
 function Mark(props: { mark: number }) {
   return (
     <div

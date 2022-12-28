@@ -61,11 +61,11 @@ export class Client {
         break;
       case "NEWGAME": {
         if (args.length < 2) break;
-        this.ourTurn = args[0] == this.username;
+        this.ourTurn = args[0] === this.username;
         const opponent = args[this.ourTurn ? 1 : 0];
         this.game = new OthelloGame();
         this.handler.newGame(opponent);
-        this.handler.updateBoard(Array.from(this.game.getBoard()));
+        this.sendBoard();
         break;
       }
       case "MOVE": {
@@ -78,8 +78,7 @@ export class Client {
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
         // TODO: AI move
-        // TODO: If AI player or not our turn is enabled, no moves should me make-able
-        this.handler.updateBoard(Array.from(this.game.getBoard()));
+        this.sendBoard();
         break;
       }
       case "GAMEOVER":
@@ -94,6 +93,13 @@ export class Client {
 
   private sendLogin() {
     this.sendCommand("LOGIN", this.username);
+  }
+
+  private sendBoard() {
+    if (this.game === null) return;
+    let board = Array.from(this.game.getBoard());
+    if (!this.ourTurn) board = board.map((v) => (v === 0 ? -1 : v));
+    this.handler.updateBoard(board);
   }
 
   public sendRaw(raw: string) {
