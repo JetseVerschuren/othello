@@ -160,7 +160,6 @@ uint64_t Othello::get_flips(uint8_t move) {
 void Othello::DoMove(uint8_t move) {
     if(move < 64) {
         uint64_t flips = get_flips(move);
-        printf("flips: %ld\n", flips);
         fields[mark] |= flips;
         fields[!mark] &= ~flips;
     }

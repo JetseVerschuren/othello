@@ -1,21 +1,19 @@
 import styles from "./Chat.module.css";
 
-export function Chat({
-  date,
-  sender,
-  message,
-}: {
+export type Chat = {
   date: Date;
   sender: string;
   message: string;
-}) {
+};
+
+export function Chat(props: Chat) {
   return (
     <div class={styles.chat}>
       <span class={styles.time}>
-        {date.getHours()}:{date.getMinutes()}
+        {props.date.getHours()}:{props.date.getMinutes()}
       </span>
-      <span class={styles.from}>{sender}</span>
-      <span class={styles.content}>{message}</span>
+      <span class={styles.from}>{props.sender}</span>
+      <span class={styles.content}>{props.message}</span>
     </div>
   );
 }

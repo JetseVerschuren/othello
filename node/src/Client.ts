@@ -1,13 +1,13 @@
 import net from "net";
-import { OthelloGame } from "./OthelloGame";
-import { ClientListener } from "./ClientListener";
+import {OthelloGame} from "./OthelloGame";
+import {ClientListener} from "./ClientListener";
 
 export class Client {
   private buffer = "";
   private handler: ClientListener;
   private socket: net.Socket;
   private loggedIn = false;
-  private username = "Jetse";
+  private username = "Jetse test";
   private ourTurn = false;
   private game: OthelloGame | null = null;
 
@@ -18,6 +18,7 @@ export class Client {
     this.socket.connect(port, host, () => {
       console.log("Connected");
       this.sendCommand("HELLO", "Node c++ hybrid", "CHAT", "RANK");
+      handler.setConnection([host, port]);
     });
 
     this.socket.on("data", (data) => {
@@ -48,14 +49,14 @@ export class Client {
         break;
       case "CHAT": {
         const [sender, message] = args;
-        console.log(`Message from ${sender}: ${message}`);
-        // TODO: Send to handler
+        this.handler.receivedChat(sender, message);
         break;
       }
-      case "WHISPER":
-        console.log("Received whisper");
-        // TODO: Implement
+      case "WHISPER": {
+        const [sender, message] = args;
+        this.handler.receivedWhisper(sender, message);
         break;
+      }
       case "PING":
         this.sendCommand("PONG");
         break;
@@ -78,7 +79,7 @@ export class Client {
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
         // TODO: AI move
-        if(this.game.shouldSkip()) this.doMove(64);
+        if (this.game.shouldSkip()) this.doMove(64);
         this.sendBoard();
         break;
       }

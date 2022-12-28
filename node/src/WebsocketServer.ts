@@ -79,4 +79,20 @@ export class WebsocketServer implements ClientListener {
     this.state.board = board;
     this.sendState();
   }
+
+  setConnection(connection: [string, number] | null): void {
+    if(!connection) return;
+    const [host, port] = connection;
+    this.state.remoteServer = `${host}:${port}`;
+    this.sendState();
+  }
+
+  receivedChat(sender: string, message: string): void {
+    this.sendMessage({command: "receivedChat", sender, message});
+  }
+
+  receivedWhisper(sender: string, message: string): void {
+    this.sendMessage({command: "receivedChat", sender, message});
+  }
+
 }

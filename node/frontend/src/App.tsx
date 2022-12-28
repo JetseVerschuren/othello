@@ -4,7 +4,7 @@ import styles from "./App.module.css";
 import { Board } from "./components/Board";
 import { Chat } from "./components/Chat";
 import createWebsocket from "@solid-primitives/websocket";
-import { JSX, onCleanup, onMount } from "solid-js";
+import {For, JSX, onCleanup, onMount} from "solid-js";
 import { ClientMessage, ClientState, ServerMessage } from "../../src/protocol";
 import { createStore } from "solid-js/store";
 
@@ -15,19 +15,31 @@ const App: Component = () => {
     opponent: null,
     remoteServer: null,
   });
+  const [chats, setChats] = createStore<Chat[]>([]);
+
+  const addChat = (sender: string, message: string) => {
+    // TODO: Choose a sensible chat limit
+    setChats([...chats.slice(-20), {
+      date: new Date(),
+      sender,
+      message,
+    }]);
+  };
+
   const [connect, disconnect, send, state] = createWebsocket(
     "ws://localhost:8080",
     (msg) => {
       const message = JSON.parse(
         msg.data as unknown as string
       ) as ServerMessage;
-      if (message.command === "updateState") {
-        setClientState(message.state);
-        // setClientState("board", () => message.state.board);
-        // setClientState("opponent", message.state.opponent);
-        // setClientState("remoteServer", message.state.remoteServer);
-      } else {
-        console.log(`Received chat from ${message.sender}: ${message.message}`);
+      switch (message.command) {
+        case "updateState":
+          setClientState(message.state);
+          break;
+        case "receivedChat":
+          console.log(`Received chat from ${message.sender}: ${message.message}`);
+          addChat(message.sender, message.message);
+          break;
       }
     },
     (err) => console.error("Something went wrong with the socket", err),
@@ -73,37 +85,16 @@ const App: Component = () => {
     <div class={styles.App}>
       <aside class={styles.aside}>
         <Board board={clientState.board} onClick={doMove} />
-        state: {state()}
+        state: {state()}<br />
+        remote server: {clientState.remoteServer}
       </aside>
 
       <div class={styles["chat-container"]}>
         <div class={styles.chatMain}>
           <div class={styles.chatMessages}>
-            <Chat
-              date={new Date("Tue Dec 27 2022 23:42:27")}
-              sender={"Jetse"}
-              message={"Nice message"}
-            />
-            <Chat
-              date={new Date("Tue Dec 27 2022 23:42:27")}
-              sender={"Jetse"}
-              message={"Nice message"}
-            />
-            <Chat
-              date={new Date("Tue Dec 27 2022 23:42:27")}
-              sender={"Jetse"}
-              message={"Nice message"}
-            />
-            <Chat
-              date={new Date("Tue Dec 27 2022 23:42:27")}
-              sender={"Jetse"}
-              message={"Nice message"}
-            />
-            <Chat
-              date={new Date("Tue Dec 27 2022 23:42:27")}
-              sender={"Jetse"}
-              message={"Nice message"}
-            />
+            <For each={chats}>
+              {(chat) => <Chat {...chat} />}
+            </For>
           </div>
         </div>
         <form class={styles["chat-form"]} onSubmit={submit}>
