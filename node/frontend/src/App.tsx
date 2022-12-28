@@ -22,7 +22,6 @@ const App: Component = () => {
         msg.data as unknown as string
       ) as ServerMessage;
       if (message.command === "updateState") {
-        console.log("New board:", message.state.board);
         setClientState(message.state);
         // setClientState("board", () => message.state.board);
         // setClientState("opponent", message.state.opponent);
@@ -55,8 +54,8 @@ const App: Component = () => {
     switch (command) {
       case "/connect":
         // TODO: Parse args
-        sendMessage({ command: "connect", host: "localhost", port: 55555 });
-        // sendMessage({ command: "connect", host: "130.89.253.64", port: 44444 });
+        // sendMessage({ command: "connect", host: "localhost", port: 55555 });
+        sendMessage({ command: "connect", host: "130.89.253.64", port: 44444 });
         break;
       case "/raw":
         sendMessage({ command: "sendRaw", raw: args.join(" ") });

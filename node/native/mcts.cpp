@@ -14,6 +14,7 @@ public:
 
 private:
     std::atomic<bool> thread_running = {false};
+    // TODO: Should be moved to the root node
     Othello game;
 
     void ApplyMove(const Napi::CallbackInfo &info);
@@ -21,6 +22,8 @@ private:
     Napi::Value DetermineMove(const Napi::CallbackInfo &info);
 
     Napi::Value GetBoard(const Napi::CallbackInfo &info);
+
+    Napi::Value ShouldSkip(const Napi::CallbackInfo &info);
 };
 
 Napi::Object MCTS::Init(Napi::Env env, Napi::Object exports) {
@@ -31,6 +34,8 @@ Napi::Object MCTS::Init(Napi::Env env, Napi::Object exports) {
             InstanceMethod<&MCTS::DetermineMove>("determineMove", static_cast<napi_property_attributes>(napi_writable |
                                                                                                         napi_configurable)),
             InstanceMethod<&MCTS::GetBoard>("getBoard",
+                                            static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+            InstanceMethod<&MCTS::ShouldSkip>("shouldSkip",
                                             static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
             StaticMethod<&MCTS::CreateNewItem>("CreateNewItem", static_cast<napi_property_attributes>(napi_writable |
                                                                                                       napi_configurable)),
@@ -105,6 +110,10 @@ Napi::Value MCTS::GetBoard(const Napi::CallbackInfo &info) {
         out[i] = board[i];
     }
     return out;
+}
+
+Napi::Value MCTS::ShouldSkip(const Napi::CallbackInfo &info) {
+    return Napi::Boolean::New(info.Env(), game.ShouldSkip());
 }
 
 

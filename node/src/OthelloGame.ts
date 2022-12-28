@@ -5,6 +5,7 @@ export interface OthelloGame {
   applyMove(move: number): void;
   getBoard(): Int8Array;
   determineMove(): Promise<number>;
+  shouldSkip(): boolean;
 }
 
 export const OthelloGame: {

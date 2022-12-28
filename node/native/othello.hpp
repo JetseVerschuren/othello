@@ -14,6 +14,8 @@ public:
 
     void DoMove(uint8_t move, Othello *target);
 
+    bool ShouldSkip();
+
 private:
     uint64_t GetValidMoves();
 
@@ -173,3 +175,15 @@ void Othello::DoMove(uint8_t move, Othello *target) {
     }
     target->mark = !mark;
 };
+
+bool Othello::ShouldSkip() {
+    // If we can make a move, we shouldn't skip
+    if(GetValidMoves() != 0) return false;
+    // Kind of an ugly hack, but works fine
+    // Always make sure to switch it twice
+    mark = !mark;
+    // Only skip if the opponent does have a move to make
+    bool skip = GetValidMoves() != 0;
+    mark = !mark;
+    return skip;
+}

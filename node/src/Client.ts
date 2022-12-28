@@ -78,6 +78,7 @@ export class Client {
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
         // TODO: AI move
+        if(this.game.shouldSkip()) this.doMove(64);
         this.sendBoard();
         break;
       }
