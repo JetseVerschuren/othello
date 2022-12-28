@@ -42,12 +42,20 @@ export class WebsocketServer implements ClientListener {
     });
   }
 
-  // TODO: Better type signature
   private handleMessage(data: ClientMessage) {
     switch (data.command) {
       case "connect":
         console.log(`Connecting to ${data.host}:${data.port}`);
         this.client = new Client(this, data.host, data.port);
+        break;
+      case "sendRaw":
+        this.client?.sendRaw(data.raw);
+        break;
+      case "sendChat":
+        this.client?.sendChat(data.message);
+        break;
+      case "doMove":
+        this.client?.doMove(data.move);
         break;
     }
   }

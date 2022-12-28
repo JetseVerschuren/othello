@@ -10,6 +10,9 @@ export type ClientMessage =
       message: string;
     }
   | {
+      command: "doMove";
+      move: number;
+} | {
       command: "sendRaw";
       raw: string;
     };

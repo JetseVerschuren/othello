@@ -158,7 +158,7 @@ void Othello::DoMove(uint8_t move) {
     uint64_t flips = get_flips(move);
     uint64_t c = a;
     a = b & ~flips;
-    b = a | flips;
+    b = c | flips;
 }
 
 void Othello::DoMove(uint8_t move, Othello *target) {

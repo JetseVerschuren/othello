@@ -14,6 +14,7 @@ public:
 
 private:
     std::atomic<bool> thread_running = {false};
+    Othello game;
 
     void ApplyMove(const Napi::CallbackInfo &info);
 
@@ -59,7 +60,7 @@ Napi::Object MCTS::Init(Napi::Env env, Napi::Object exports) {
 MCTS::MCTS(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MCTS>(info) {}
 
 void MCTS::ApplyMove(const Napi::CallbackInfo &info) {
-    Napi::Env env = info.Env();
+    game.DoMove(info[0].As<Napi::Number>().Int64Value());
 }
 
 Napi::Value MCTS::DetermineMove(const Napi::CallbackInfo &info) {
@@ -98,8 +99,7 @@ Napi::Value MCTS::DetermineMove(const Napi::CallbackInfo &info) {
 }
 
 Napi::Value MCTS::GetBoard(const Napi::CallbackInfo &info) {
-    Othello game;
-    std::vector<int8_t> board = game.ToVector();
+    std::vector<int8_t> board = this->game.ToVector();
     Napi::Int8Array out = Napi::Int8Array::New(info.Env(), board.size());
     for (size_t i = 0; i < board.size(); i++) {
         out[i] = board[i];

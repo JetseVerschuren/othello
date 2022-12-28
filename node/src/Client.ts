@@ -29,7 +29,7 @@ export class Client {
     });
   }
 
-  private sendCommand(command: string, ...args: string[]) {
+  private sendCommand(command: string, ...args: (string | number)[]) {
     this.socket.write([command, ...args].join("~") + "\n");
   }
 
@@ -78,7 +78,7 @@ export class Client {
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
         // TODO: AI move
-        // TODO: If AI player is enabled, no moves should me make-able
+        // TODO: If AI player or not our turn is enabled, no moves should me make-able
         this.handler.updateBoard(Array.from(this.game.getBoard()));
         break;
       }
@@ -94,5 +94,18 @@ export class Client {
 
   private sendLogin() {
     this.sendCommand("LOGIN", this.username);
+  }
+
+  public sendRaw(raw: string) {
+    this.sendCommand(raw);
+  }
+
+  public sendChat(message: string) {
+    this.sendCommand("CHAT", message);
+  }
+
+  public doMove(move: number) {
+    // TODO: Check valid move
+    this.sendCommand("MOVE", move);
   }
 }

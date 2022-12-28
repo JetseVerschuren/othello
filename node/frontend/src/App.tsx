@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 
 import styles from "./App.module.css";
-import {Board} from "./components/Board";
+import { Board } from "./components/Board";
 import { Chat } from "./components/Chat";
 import createWebsocket from "@solid-primitives/websocket";
 import { JSX, onCleanup, onMount } from "solid-js";
@@ -64,10 +64,16 @@ const App: Component = () => {
     }
   };
 
+  const doMove = (move: number) => {
+    console.log(`Clicked field ${move}`);
+    if(clientState.board?.[move] !== 0) return console.log("Invalid move");
+    sendMessage({command: "doMove", move});
+  }
+
   return (
     <div class={styles.App}>
       <aside class={styles.aside}>
-        <Board board={clientState.board} />
+        <Board board={clientState.board} onClick={doMove} />
         state: {state()}
       </aside>
 
