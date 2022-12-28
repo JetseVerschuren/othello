@@ -1,6 +1,6 @@
 import net from "net";
-import {OthelloGame} from "./OthelloGame";
-import {ClientListener} from "./ClientListener";
+import { OthelloGame } from "./OthelloGame";
+import { ClientListener } from "./ClientListener";
 
 export class Client {
   private buffer = "";
@@ -79,7 +79,10 @@ export class Client {
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
         // TODO: AI move
-        if (this.game.shouldSkip()) this.doMove(64);
+        // If there's no valid move for us, and there's no valid move for the opponent, skip
+        if (!this.game.getBoard().includes(0) && !this.game.opponentCanMove()) {
+          this.doMove(64);
+        }
         this.sendBoard();
         break;
       }

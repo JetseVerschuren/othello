@@ -4,7 +4,7 @@ import styles from "./App.module.css";
 import { Board } from "./components/Board";
 import { Chat } from "./components/Chat";
 import createWebsocket from "@solid-primitives/websocket";
-import {For, JSX, onCleanup, onMount} from "solid-js";
+import { For, JSX, onCleanup, onMount } from "solid-js";
 import { ClientMessage, ClientState, ServerMessage } from "../../src/protocol";
 import { createStore } from "solid-js/store";
 
@@ -19,11 +19,14 @@ const App: Component = () => {
 
   const addChat = (sender: string, message: string) => {
     // TODO: Choose a sensible chat limit
-    setChats([...chats.slice(-20), {
-      date: new Date(),
-      sender,
-      message,
-    }]);
+    setChats([
+      ...chats.slice(-20),
+      {
+        date: new Date(),
+        sender,
+        message,
+      },
+    ]);
   };
 
   const [connect, disconnect, send, state] = createWebsocket(
@@ -37,7 +40,9 @@ const App: Component = () => {
           setClientState(message.state);
           break;
         case "receivedChat":
-          console.log(`Received chat from ${message.sender}: ${message.message}`);
+          console.log(
+            `Received chat from ${message.sender}: ${message.message}`
+          );
           addChat(message.sender, message.message);
           break;
       }
@@ -85,16 +90,15 @@ const App: Component = () => {
     <div class={styles.App}>
       <aside class={styles.aside}>
         <Board board={clientState.board} onClick={doMove} />
-        state: {state()}<br />
+        state: {state()}
+        <br />
         remote server: {clientState.remoteServer}
       </aside>
 
       <div class={styles["chat-container"]}>
         <div class={styles.chatMain}>
           <div class={styles.chatMessages}>
-            <For each={chats}>
-              {(chat) => <Chat {...chat} />}
-            </For>
+            <For each={chats}>{(chat) => <Chat {...chat} />}</For>
           </div>
         </div>
         <form class={styles["chat-form"]} onSubmit={submit}>

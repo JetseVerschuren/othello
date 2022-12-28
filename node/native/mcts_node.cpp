@@ -1,21 +1,22 @@
 #include <napi.h>
 #include <thread>
 #include <atomic>
+#include<chrono>
 #include "othello.hpp"
 #include "node.hpp"
+#include "mcts.hpp"
 
-class MCTS : public Napi::ObjectWrap<MCTS> {
+class MCTS_Node : public Napi::ObjectWrap<MCTS_Node> {
 public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
 
-    MCTS(const Napi::CallbackInfo &info);
+    MCTS_Node(const Napi::CallbackInfo &info);
 
     static Napi::Value CreateNewItem(const Napi::CallbackInfo &info);
 
 private:
     std::atomic<bool> thread_running = {false};
-    // TODO: Should be moved to the root node
-    Othello game;
+    MCTS mcts;
 
     void ApplyMove(const Napi::CallbackInfo &info);
 
@@ -23,25 +24,25 @@ private:
 
     Napi::Value GetBoard(const Napi::CallbackInfo &info);
 
-    Napi::Value ShouldSkip(const Napi::CallbackInfo &info);
+    Napi::Value OpponentCanMove(const Napi::CallbackInfo &info);
 };
 
-Napi::Object MCTS::Init(Napi::Env env, Napi::Object exports) {
+Napi::Object MCTS_Node::Init(Napi::Env env, Napi::Object exports) {
     // This method is used to hook the accessor and method callbacks
     Napi::Function func = DefineClass(env, "MCTS", {
-            InstanceMethod<&MCTS::ApplyMove>("applyMove",
-                                             static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-            InstanceMethod<&MCTS::DetermineMove>("determineMove", static_cast<napi_property_attributes>(napi_writable |
-                                                                                                        napi_configurable)),
-            InstanceMethod<&MCTS::GetBoard>("getBoard",
-                                            static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-            InstanceMethod<&MCTS::ShouldSkip>("shouldSkip",
-                                            static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-            StaticMethod<&MCTS::CreateNewItem>("CreateNewItem", static_cast<napi_property_attributes>(napi_writable |
-                                                                                                      napi_configurable)),
+            InstanceMethod<&MCTS_Node::ApplyMove>("applyMove",
+                                                  static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+            InstanceMethod<&MCTS_Node::DetermineMove>("determineMove", static_cast<napi_property_attributes>(napi_writable |
+                                                                                                             napi_configurable)),
+            InstanceMethod<&MCTS_Node::GetBoard>("getBoard",
+                                                 static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+            InstanceMethod<&MCTS_Node::OpponentCanMove>("opponentCanMove",
+                                                        static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+            StaticMethod<&MCTS_Node::CreateNewItem>("CreateNewItem", static_cast<napi_property_attributes>(napi_writable |
+                                                                                                           napi_configurable)),
     });
 
-    Napi::FunctionReference *constructor = new Napi::FunctionReference();
+    auto *constructor = new Napi::FunctionReference();
 
     // Create a persistent reference to the class constructor. This will allow
     // a function called on a class prototype and a function
@@ -62,13 +63,13 @@ Napi::Object MCTS::Init(Napi::Env env, Napi::Object exports) {
     return exports;
 }
 
-MCTS::MCTS(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MCTS>(info) {}
+MCTS_Node::MCTS_Node(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MCTS_Node>(info) {}
 
-void MCTS::ApplyMove(const Napi::CallbackInfo &info) {
-    game.DoMove(info[0].As<Napi::Number>().Int64Value());
+void MCTS_Node::ApplyMove(const Napi::CallbackInfo &info) {
+    mcts.ApplyMove(info[0].As<Napi::Number>().Int64Value());
 }
 
-Napi::Value MCTS::DetermineMove(const Napi::CallbackInfo &info) {
+Napi::Value MCTS_Node::DetermineMove(const Napi::CallbackInfo &info) {
     Napi::Env env = info.Env();
     std::shared_ptr<Napi::Promise::Deferred> deferred = std::make_shared<Napi::Promise::Deferred>(
             Napi::Promise::Deferred::New(env));
@@ -90,10 +91,9 @@ Napi::Value MCTS::DetermineMove(const Napi::CallbackInfo &info) {
             delete value;
         };
 
-        // TODO: Actually calculate the move
+        uint8_t move = mcts.DetermineMove();
 
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        int *value = new int(42);
+        int *value = new int(move);
         // TODO: Handle possible error
         tsfn.BlockingCall(value, callback);
         tsfn.Release();
@@ -103,8 +103,8 @@ Napi::Value MCTS::DetermineMove(const Napi::CallbackInfo &info) {
     return deferred->Promise();
 }
 
-Napi::Value MCTS::GetBoard(const Napi::CallbackInfo &info) {
-    std::vector<int8_t> board = this->game.ToVector();
+Napi::Value MCTS_Node::GetBoard(const Napi::CallbackInfo &info) {
+    std::vector<int8_t> board = mcts.GetBoard();
     Napi::Int8Array out = Napi::Int8Array::New(info.Env(), board.size());
     for (size_t i = 0; i < board.size(); i++) {
         out[i] = board[i];
@@ -112,25 +112,24 @@ Napi::Value MCTS::GetBoard(const Napi::CallbackInfo &info) {
     return out;
 }
 
-Napi::Value MCTS::ShouldSkip(const Napi::CallbackInfo &info) {
-    return Napi::Boolean::New(info.Env(), game.ShouldSkip());
+Napi::Value MCTS_Node::OpponentCanMove(const Napi::CallbackInfo &info) {
+    return Napi::Boolean::New(info.Env(), mcts.OpponentCanMove());
 }
 
 
 // Initialize native add-on
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    MCTS::Init(env, exports);
+    MCTS_Node::Init(env, exports);
     return exports;
 }
 
 // Create a new item using the constructor stored during Init.
-Napi::Value MCTS::CreateNewItem(const Napi::CallbackInfo &info) {
+Napi::Value MCTS_Node::CreateNewItem(const Napi::CallbackInfo &info) {
     // Retrieve the instance data we stored during `Init()`. We only stored the
     // constructor there, so we retrieve it here to create a new instance of the
     // JS class the constructor represents.
-    Napi::FunctionReference *constructor =
-            info.Env().GetInstanceData<Napi::FunctionReference>();
-    return constructor->New({Napi::Number::New(info.Env(), 42)});
+    auto *constructor = info.Env().GetInstanceData<Napi::FunctionReference>();
+    return constructor->New({});
 }
 
 // Register and initialize native add-on

@@ -14,11 +14,13 @@ public:
 
     void DoMove(uint8_t move, Othello *target);
 
-    bool ShouldSkip();
+    bool OpponentCanMove();
 
-private:
     uint64_t GetValidMoves();
 
+    bool win();
+
+private:
     uint64_t moves_down(uint8_t direction);
 
     uint64_t moves_up(uint8_t increment);
@@ -30,14 +32,12 @@ private:
     uint64_t get_flips(uint8_t move);
 
     uint64_t fields[2];
-    bool mark = 0;
-    bool skip;
+    bool mark = false;
 };
 
 Othello::Othello() {
     fields[mark] = 0x0000000810000000;
     fields[!mark] = 0x0000001008000000;
-    skip = false;
 }
 
 std::vector<int8_t> Othello::ToVector() {
@@ -158,7 +158,7 @@ uint64_t Othello::get_flips(uint8_t move) {
 }
 
 void Othello::DoMove(uint8_t move) {
-    if(move < 64) {
+    if (move < 64) {
         uint64_t flips = get_flips(move);
         fields[mark] |= flips;
         fields[!mark] &= ~flips;
@@ -167,7 +167,7 @@ void Othello::DoMove(uint8_t move) {
 }
 
 void Othello::DoMove(uint8_t move, Othello *target) {
-    if(move < 64) {
+    if (move < 64) {
         uint64_t flips = get_flips(move);
         target->fields[mark] = fields[mark] | flips;
         target->fields[!mark] = fields[!mark] & ~flips;
@@ -175,14 +175,16 @@ void Othello::DoMove(uint8_t move, Othello *target) {
     target->mark = !mark;
 };
 
-bool Othello::ShouldSkip() {
-    // If we can make a move, we shouldn't skip
-    if(GetValidMoves() != 0) return false;
+bool Othello::OpponentCanMove() {
     // Kind of an ugly hack, but works fine
     // Always make sure to switch it twice
     mark = !mark;
-    // Only skip if the opponent does have a move to make
-    bool skip = GetValidMoves() != 0;
+    bool canMove = GetValidMoves() != 0;
     mark = !mark;
-    return skip;
+    return canMove;
+}
+
+// Return if the current mark has won. A draw is not winning
+bool Othello::win() {
+    return popcount64c(fields[mark]) > popcount64c(fields[!mark]);
 }
