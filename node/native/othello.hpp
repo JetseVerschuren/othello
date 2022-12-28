@@ -10,14 +10,12 @@ public:
 
     static int popcount64c(uint64_t x);
 
-    uint64_t GetValidMoves();
-
     void DoMove(uint8_t move);
 
     void DoMove(uint8_t move, Othello *target);
 
 private:
-    uint64_t ValidMoves();
+    uint64_t GetValidMoves();
 
     uint64_t moves_down(uint8_t direction);
 
@@ -42,7 +40,7 @@ Othello::Othello() {
 std::vector<int8_t> Othello::ToVector() {
     std::vector<int8_t> out;
     out.reserve(64);
-    uint64_t p = a, q = b, valid_moves = ValidMoves();
+    uint64_t p = a, q = b, valid_moves = GetValidMoves();
     for (size_t i = 0; i < 64; i++) {
         if (p & 1) out.push_back(1);
         else if (q & 1) out.push_back(2);
@@ -53,10 +51,6 @@ std::vector<int8_t> Othello::ToVector() {
         valid_moves >>= 1;
     }
     return out;
-}
-
-uint64_t Othello::ValidMoves() {
-    return 0;
 }
 
 // https://en.wikipedia.org/wiki/Hamming_weight

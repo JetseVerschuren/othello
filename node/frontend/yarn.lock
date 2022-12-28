@@ -430,6 +430,11 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
+"@solid-primitives/websocket@^0.3.3":
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/@solid-primitives/websocket/-/websocket-0.3.3.tgz#84ceecf016c9afa95d3d0a7bce0ba683fbbda7ec"
+  integrity sha512-FlaBN07UDsu1u42xUO/776+s7Tip4EIp3l/SUzVNnJqVL0ryDOMLgvlYXkheVu1+8FntPCek1g6Nd8uS5L6qwQ==
+
 ansi-styles@^3.2.1:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-3.2.1.tgz#41fbb20243e50b12be0f04b8dedbf07520ce841d"

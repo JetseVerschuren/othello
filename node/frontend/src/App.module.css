@@ -1,52 +1,53 @@
 .App {
-    font-family: system-ui,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,BlinkMacSystemFont,Helvetica Neue,Arial;
-    display: flex;
-    height: 100vh;
-    width: 100vw;
+  font-family: system-ui, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans,
+    sans-serif, BlinkMacSystemFont, Helvetica Neue, Arial;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
 }
 
 .aside {
-    background-color: #415364;
-    /*width: 25vw;*/
-    padding: 16px;
+  background-color: #415364;
+  /*width: 25vw;*/
+  padding: 16px;
 }
 
 .chat-container {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .chatMain {
-    background-color: #303e4a;
-    flex-grow: 1;
-    display: flex;
+  background-color: #303e4a;
+  flex-grow: 1;
+  display: flex;
 }
 
 .chatMessages {
-    margin-top: auto;
-    padding: 10px 0;
+  margin-top: auto;
+  padding: 10px 0;
 }
 
 .chat-form {
-    background-color: #28333d;
-    color: #f3f3f3;
+  background-color: #28333d;
+  color: #f3f3f3;
 
-    padding: 6px;
-    display: flex;
+  padding: 6px;
+  display: flex;
 }
 
 .chatTextarea {
-    background-color: inherit;
-    color: inherit;
+  background-color: inherit;
+  color: inherit;
 
-    height: 19px;
-    /*min-height: 19px;*/
-    /*max-height: 95px;*/
-    line-height: 19px;
-    flex-grow: 1;
-    border: none;
-    margin: 5px;
-    outline: none;
+  height: 19px;
+  /*min-height: 19px;*/
+  /*max-height: 95px;*/
+  line-height: 19px;
+  flex-grow: 1;
+  border: none;
+  margin: 5px;
+  outline: none;
 }

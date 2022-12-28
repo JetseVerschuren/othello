@@ -1,6 +1,6 @@
 import net from "net";
 import { OthelloGame } from "./OthelloGame";
-import {ClientListener} from "./ClientListener";
+import { ClientListener } from "./ClientListener";
 
 export class Client {
   private buffer = "";
@@ -65,7 +65,7 @@ export class Client {
         const opponent = args[this.ourTurn ? 1 : 0];
         this.game = new OthelloGame();
         this.handler.newGame(opponent);
-        this.handler.updateBoard(this.game.getBoard());
+        this.handler.updateBoard(Array.from(this.game.getBoard()));
         break;
       }
       case "MOVE": {
@@ -79,7 +79,7 @@ export class Client {
         this.ourTurn = !this.ourTurn;
         // TODO: AI move
         // TODO: If AI player is enabled, no moves should me make-able
-        this.handler.updateBoard(this.game.getBoard());
+        this.handler.updateBoard(Array.from(this.game.getBoard()));
         break;
       }
       case "GAMEOVER":

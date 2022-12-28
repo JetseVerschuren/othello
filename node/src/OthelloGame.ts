@@ -3,7 +3,7 @@ const { MCTS } = require("bindings")("mcts");
 
 export interface OthelloGame {
   applyMove(move: number): void;
-  getBoard(): number[];
+  getBoard(): Int8Array;
   determineMove(): Promise<number>;
 }
 
