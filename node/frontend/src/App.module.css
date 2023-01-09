@@ -23,6 +23,7 @@
   background-color: #303e4a;
   flex-grow: 1;
   display: flex;
+  overflow: scroll;
 }
 
 .chatMessages {

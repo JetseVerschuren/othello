@@ -20,7 +20,7 @@ const App: Component = () => {
   const addChat = (sender: string, message: string) => {
     // TODO: Choose a sensible chat limit
     setChats([
-      ...chats.slice(-20),
+      ...chats.slice(-100),
       {
         date: new Date(),
         sender,
