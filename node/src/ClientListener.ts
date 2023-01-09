@@ -10,4 +10,6 @@ export interface ClientListener {
   receivedChat(sender: string, message: string): void;
 
   receivedWhisper(sender: string, message: string): void;
+
+  setOnlineUsers(args: string[]): void;
 }

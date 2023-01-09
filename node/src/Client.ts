@@ -1,19 +1,25 @@
 import net from "net";
-import { OthelloGame } from "./OthelloGame";
-import { ClientListener } from "./ClientListener";
+import {OthelloGame} from "./OthelloGame";
+import {ClientListener} from "./ClientListener";
 
 export class Client {
   private buffer = "";
   private handler: ClientListener;
   private socket: net.Socket;
   private loggedIn = false;
-  private username = "Jetse test";
   private ourTurn = false;
   private game: OthelloGame | null = null;
+  private readonly onlineUserInterval: NodeJS.Timer;
 
-  constructor(handler: ClientListener, host: string, port: number) {
+  constructor(handler: ClientListener, host: string, port: number, private username: string, private AIRuntime = 0) {
     this.handler = handler;
     this.socket = new net.Socket();
+
+    this.onlineUserInterval = setInterval(() => {
+      this.sendCommand("LIST");
+    }, 5000);
+
+    this.socket.on("close", () => clearInterval(this.onlineUserInterval));
 
     this.socket.connect(port, host, () => {
       console.log("Connected");
@@ -57,8 +63,8 @@ export class Client {
         this.handler.receivedWhisper(sender, message);
         break;
       }
-      case "PING":
-        this.sendCommand("PONG");
+      case "LIST":
+        this.handler.setOnlineUsers(args);
         break;
       case "NEWGAME": {
         if (args.length < 2) break;
@@ -79,15 +85,20 @@ export class Client {
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
         // If there's no valid move for us, and there's no valid move for the opponent, skip
-        if (!this.game.getBoard().includes(0) && !this.game.opponentCanMove()) {
-          this.doMove(64);
+        if (!this.game.getBoard().includes(0) && !this.game.opponentCanMove()) this.doMove(64);
+        if (this.ourTurn && this.AIRuntime > 0) {
+          this.game.determineMove(this.AIRuntime)
+            .then(move => {
+              this.doMove(move);
+              this.handler.receivedWhisper("AI", `I chose ${move}`)
+            });
         }
-        if(this.ourTurn) this.game.determineMove().then(move => this.handler.receivedWhisper("AI",`I chose ${move}`));
         this.sendBoard();
         break;
       }
       case "GAMEOVER":
         this.game = null;
+        this.handler.receivedWhisper("Server", `Gameover: ${args[0]}`);
         // TODO: Send to handler
         break;
       default:
@@ -118,5 +129,13 @@ export class Client {
   public doMove(move: number) {
     // TODO: Check valid move
     this.sendCommand("MOVE", move);
+  }
+
+  public enqueue() {
+    this.sendCommand("QUEUE");
+  }
+
+  public setAIRuntime(runtime: number) {
+    this.AIRuntime = runtime;
   }
 }

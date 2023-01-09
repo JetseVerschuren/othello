@@ -2,16 +2,12 @@ import express from "express";
 import ws from "ws";
 import { Client } from "./Client";
 import { ClientListener } from "./ClientListener";
-import { ClientMessage, ClientState, ServerMessage } from "./protocol";
+import {ClientMessage, ClientState, defaultClientState, ServerMessage} from "./protocol";
 
 export class WebsocketServer implements ClientListener {
   private client: Client | null = null;
   private wsServer: ws.Server;
-  private state: ClientState = {
-    board: new Array(64).fill(-1),
-    opponent: null,
-    remoteServer: null,
-  };
+  private state: ClientState = defaultClientState;
 
   constructor(port: number) {
     const app = express();
@@ -46,7 +42,7 @@ export class WebsocketServer implements ClientListener {
     switch (data.command) {
       case "connect":
         console.log(`Connecting to ${data.host}:${data.port}`);
-        this.client = new Client(this, data.host, data.port);
+        this.client = new Client(this, data.host, data.port, data.username, this.state.AIRuntime);
         break;
       case "sendRaw":
         this.client?.sendRaw(data.raw);
@@ -56,6 +52,16 @@ export class WebsocketServer implements ClientListener {
         break;
       case "doMove":
         this.client?.doMove(data.move);
+        break;
+      case "queue":
+        if(!this.client) return;
+        this.client.enqueue();
+        this.state.inQueue = !this.state.inQueue;
+        this.sendState();
+        break;
+      case "ai":
+        this.client?.setAIRuntime(data.runtime);
+        this.state.AIRuntime = data.runtime;
         break;
     }
   }
@@ -72,6 +78,7 @@ export class WebsocketServer implements ClientListener {
 
   newGame(opponentUsername: ClientState["opponent"]) {
     this.state.opponent = opponentUsername;
+    this.state.inQueue = false;
     this.sendState();
   }
 
@@ -84,6 +91,11 @@ export class WebsocketServer implements ClientListener {
     if (!connection) return;
     const [host, port] = connection;
     this.state.remoteServer = `${host}:${port}`;
+    this.sendState();
+  }
+
+  setOnlineUsers(args: string[]): void {
+    this.state.onlineUsers = args;
     this.sendState();
   }
 

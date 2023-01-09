@@ -5,16 +5,12 @@ import { Board } from "./components/Board";
 import { Chat } from "./components/Chat";
 import createWebsocket from "@solid-primitives/websocket";
 import { For, JSX, onCleanup, onMount } from "solid-js";
-import { ClientMessage, ClientState, ServerMessage } from "../../src/protocol";
+import {ClientMessage, ClientState, defaultClientState, ServerMessage} from "../../src/protocol";
 import { createStore } from "solid-js/store";
 
 const App: Component = () => {
   // const [clientState, setClientState] = useState();
-  const [clientState, setClientState] = createStore<ClientState>({
-    board: new Array(64).fill(-1),
-    opponent: null,
-    remoteServer: null,
-  });
+  const [clientState, setClientState] = createStore<ClientState>(defaultClientState);
   const [chats, setChats] = createStore<Chat[]>([]);
 
   const addChat = (sender: string, message: string) => {
@@ -70,13 +66,20 @@ const App: Component = () => {
     const [command, ...args] = message.split(" ");
     switch (command) {
       case "/connect":
-        // TODO: Parse args
-        // sendMessage({ command: "connect", host: "localhost", port: 55555 });
-        sendMessage({ command: "connect", host: "130.89.253.64", port: 44444 });
+        sendMessage({ command: "connect", host: "130.89.253.64", port: 44444, username: args[0] ?? "Jetse test" });
         break;
       case "/raw":
         sendMessage({ command: "sendRaw", raw: args.join(" ") });
         break;
+      case "/queue":
+        sendMessage({ command: "queue" });
+        break;
+      case "/ai": {
+        const runtime = parseInt(args[0] ?? "");
+        if(isNaN(runtime)) addChat("", "Invalid AI runtime");
+        else sendMessage({command: "ai", runtime});
+        break;
+      }
     }
   };
 
@@ -93,6 +96,10 @@ const App: Component = () => {
         state: {state()}
         <br />
         remote server: {clientState.remoteServer}
+        <br />
+        AI Runtime: {clientState.AIRuntime > 0 ? `${clientState.AIRuntime}ms` : "Disabled"}
+        <br />
+        Queue status: {clientState.inQueue ? "yes" : "no"}
       </aside>
 
       <div class={styles["chat-container"]}>
