@@ -8,8 +8,12 @@
 
 .aside {
   background-color: #415364;
+  color: #b7c5d1;
   /*width: 25vw;*/
   padding: 16px;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-container {
@@ -51,4 +55,24 @@
   border: none;
   margin: 5px;
   outline: none;
+}
+
+.statusBubble {
+    width: 10px;
+    height: 10px;
+    border-radius: 100%;
+    display: inline-block;
+    margin-left: 8px;
+}
+
+.statusRed {
+    background-color: red;
+}
+
+.statusGreen {
+    background-color: green;
+}
+
+.statusOrange {
+    background-color: orange;
 }
