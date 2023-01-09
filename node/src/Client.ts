@@ -82,7 +82,7 @@ export class Client {
         if (!this.game.getBoard().includes(0) && !this.game.opponentCanMove()) {
           this.doMove(64);
         }
-        /*if(this.ourTurn) */this.game.determineMove().then(move => this.handler.receivedWhisper("AI",`I chose ${move}`));
+        if(this.ourTurn) this.game.determineMove().then(move => this.handler.receivedWhisper("AI",`I chose ${move}`));
         this.sendBoard();
         break;
       }
