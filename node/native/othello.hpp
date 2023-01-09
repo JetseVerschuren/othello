@@ -118,15 +118,15 @@ uint64_t Othello::GetValidMoves() {
 
 uint64_t Othello::flips_up(uint64_t move, uint8_t increment) {
     uint64_t candidates = fields[!mark] & (move << increment);
-    uint64_t empty = ~(fields[mark] | fields[!mark]);
+    uint64_t empty = ~(fields[mark] | fields[!mark]) | 0x0101010101010101;
     uint64_t flips = candidates;
     while (candidates != 0) {
         // If we hit an empty spot, it's not enclosed,
         // and thus nothing should be flipped
-        if ((empty | 0x0101010101010101) & (candidates << increment)) return 0;
+        if (empty & (candidates << increment)) return 0;
         // If we hit one of our pieces, it's enclosed,
         // and we should return the bits
-        if (fields[mark] & (candidates << increment)) return candidates;
+        if (fields[mark] & (candidates << increment)) return flips;
 
         candidates = fields[!mark] & (candidates << increment);
         flips |= candidates;
@@ -136,11 +136,11 @@ uint64_t Othello::flips_up(uint64_t move, uint8_t increment) {
 
 uint64_t Othello::flips_down(const uint64_t move, const uint8_t increment) {
     uint64_t candidates = fields[!mark] & (move >> increment);
-    uint64_t empty = ~(fields[mark] | fields[!mark]);
+    uint64_t empty = ~(fields[mark] | fields[!mark]) | 0x8080808080808080;
     uint64_t flips = candidates;
     while (candidates != 0) {
-        if ((empty | 0x8080808080808080) & (candidates >> increment)) return 0;
-        if (fields[mark] & (candidates >> increment)) return candidates;
+        if (empty & (candidates >> increment)) return 0;
+        if (fields[mark] & (candidates >> increment)) return flips;
         candidates = fields[!mark] & (candidates << increment);
         flips |= candidates;
     }
