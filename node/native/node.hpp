@@ -1,9 +1,12 @@
 #include <climits>
 #include <cmath>
+#include <algorithm>
 
 class Node {
 public:
     Node(uint8_t move, Node *parent);
+
+    Node(Node *base);
 
     Node *SelectPromisingChild();
 
@@ -14,6 +17,12 @@ public:
     bool PlayRandomGame();
 
     void BackPropogate(bool won);
+
+    Node *ApplyMove(uint8_t i);
+
+    uint8_t GetBestMove();
+
+    unsigned int TreeSize();
 
 private:
     Othello game;
@@ -30,6 +39,22 @@ private:
 Node::Node(uint8_t move, Node *parent = nullptr) {
     this->parent = parent;
     this->move = move;
+}
+
+/*
+ * Move base into this new Node
+ * The children are moved (vector of base is empty after this), other ints are untouched
+ */
+Node::Node(Node *base) {
+    this->parent = nullptr;
+    this->visit_count = base->visit_count;
+    this->win_score = base->win_score;
+    this->game = base->game;
+    this->move = base->move;
+    this->children.swap(base->children);
+    for (auto &child: children) {
+        child.parent = this;
+    }
 }
 
 Node *Node::SelectPromisingChild() {
@@ -77,12 +102,11 @@ void Node::Expand() {
     int nr_moves = Othello::popcount64c(moves);
     children.reserve(nr_moves);
 
-    uint8_t i = 0;
-    while (moves != 0) {
+
+    for (int i = 0; i < 64; ++i) {
         if (moves & 1) {
             children.emplace_back(i, this);
             game.DoMove(i, &children.back().game);
-            i++;
         }
         moves >>= 1;
     }
@@ -118,20 +142,20 @@ bool Node::PlayRandomGame() {
 //    printf("Random game\n");
     Othello tmp_game = game;
     // TODO: Test if first flag is faster
-    if(tmp_game.GetValidMoves() == 0 && !tmp_game.OpponentCanMove() && !tmp_game.win()) {
+    if (tmp_game.GetValidMoves() == 0 && !tmp_game.OpponentCanMove() && !tmp_game.win()) {
 //        printf("Instant loss\n");
         parent->win_score = INT_MIN;
         return false;
     }
-    while(true) {
+    while (true) {
 //        printf("Move loop\n");
         uint64_t moves = tmp_game.GetValidMoves();
-        if(moves == 0) {
+        if (moves == 0) {
 //            printf("No available moves\n");
             // TODO: There's game logic here, I don't like it
             // TODO: Test if skip flag is faster
             // If the opponent can't move, this is the end of the game
-            if(!tmp_game.OpponentCanMove()) break;
+            if (!tmp_game.OpponentCanMove()) break;
             tmp_game.DoMove(64);
             continue;
         }
@@ -153,4 +177,23 @@ void Node::BackPropogate(bool won) {
         won = !won;
         node = node->parent;
     }
+}
+
+Node *Node::ApplyMove(uint8_t i) {
+    auto child = std::find_if(children.begin(), children.end(), [i](auto &node) { return node.move == i; });
+    auto new_root = new Node(&(*child));
+    delete this;
+    return new_root;
+}
+
+uint8_t Node::GetBestMove() {
+//    for(auto &child : children) printf("Move: %d\tVisit count: %d\n", child.move, child.visit_count);
+    auto iter = std::max_element(children.begin(), children.end(), [](auto &a, auto &b){return a.visit_count < b.visit_count;});
+    return iter->move;
+}
+
+unsigned int Node::TreeSize() {
+    unsigned int size = children.size();
+    for(auto &child : children) size += child.TreeSize();
+    return size;
 }

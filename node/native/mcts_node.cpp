@@ -1,9 +1,7 @@
 #include <napi.h>
 #include <thread>
 #include <atomic>
-#include<chrono>
-#include "othello.hpp"
-#include "node.hpp"
+#include <chrono>
 #include "mcts.hpp"
 
 class MCTS_Node : public Napi::ObjectWrap<MCTS_Node> {
@@ -31,15 +29,20 @@ Napi::Object MCTS_Node::Init(Napi::Env env, Napi::Object exports) {
     // This method is used to hook the accessor and method callbacks
     Napi::Function func = DefineClass(env, "MCTS", {
             InstanceMethod<&MCTS_Node::ApplyMove>("applyMove",
-                                                  static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-            InstanceMethod<&MCTS_Node::DetermineMove>("determineMove", static_cast<napi_property_attributes>(napi_writable |
-                                                                                                             napi_configurable)),
+                                                  static_cast<napi_property_attributes>(napi_writable |
+                                                                                        napi_configurable)),
+            InstanceMethod<&MCTS_Node::DetermineMove>("determineMove",
+                                                      static_cast<napi_property_attributes>(napi_writable |
+                                                                                            napi_configurable)),
             InstanceMethod<&MCTS_Node::GetBoard>("getBoard",
-                                                 static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
+                                                 static_cast<napi_property_attributes>(napi_writable |
+                                                                                       napi_configurable)),
             InstanceMethod<&MCTS_Node::OpponentCanMove>("opponentCanMove",
-                                                        static_cast<napi_property_attributes>(napi_writable | napi_configurable)),
-            StaticMethod<&MCTS_Node::CreateNewItem>("CreateNewItem", static_cast<napi_property_attributes>(napi_writable |
-                                                                                                           napi_configurable)),
+                                                        static_cast<napi_property_attributes>(napi_writable |
+                                                                                              napi_configurable)),
+            StaticMethod<&MCTS_Node::CreateNewItem>("CreateNewItem",
+                                                    static_cast<napi_property_attributes>(napi_writable |
+                                                                                          napi_configurable)),
     });
 
     auto *constructor = new Napi::FunctionReference();
@@ -79,25 +82,28 @@ Napi::Value MCTS_Node::DetermineMove(const Napi::CallbackInfo &info) {
         return deferred->Promise();
     }
 
+    double runtime = 2000;
+    if (info.Length() > 1 && !info[0].IsUndefined()) runtime = info[0].As<Napi::Number>().DoubleValue();
+
     // TODO: What a mess, can't this be done easier?
     Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(
             env, Napi::Function::New(env, [](const Napi::CallbackInfo &info) {}),
             "TSFN", 0, 1,
             [](Napi::Env) {});
     thread_running = true;
-    std::thread([tsfn, deferred, this] {
+    std::thread([tsfn, deferred, this, runtime] {
         auto callback = [deferred](Napi::Env env, Napi::Function jsCallback, const int *value) {
             deferred->Resolve({Napi::Number::New(env, *value)});
             delete value;
         };
 
-        uint8_t move = mcts.DetermineMove();
+        uint8_t move = this->mcts.DetermineMove((unsigned int) runtime);
 
         int *value = new int(move);
         // TODO: Handle possible error
         tsfn.BlockingCall(value, callback);
         tsfn.Release();
-        thread_running = true;
+        this->thread_running = false;
     }).detach();
 
     return deferred->Promise();

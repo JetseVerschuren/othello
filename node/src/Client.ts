@@ -78,11 +78,11 @@ export class Client {
         // TODO: Verify move is valid
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
-        // TODO: AI move
         // If there's no valid move for us, and there's no valid move for the opponent, skip
         if (!this.game.getBoard().includes(0) && !this.game.opponentCanMove()) {
           this.doMove(64);
         }
+        /*if(this.ourTurn) */this.game.determineMove().then(move => this.handler.receivedWhisper("AI",`I chose ${move}`));
         this.sendBoard();
         break;
       }

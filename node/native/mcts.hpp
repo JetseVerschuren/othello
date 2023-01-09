@@ -8,9 +8,11 @@ class MCTS {
 public:
     MCTS();
 
+    ~MCTS();
+
     void ApplyMove(uint8_t move);
 
-    uint8_t DetermineMove();
+    uint8_t DetermineMove(unsigned int runtime);
 
     std::vector<int8_t> GetBoard();
 
@@ -24,12 +26,19 @@ MCTS::MCTS() {
     root = new Node(0, nullptr);
 }
 
-void MCTS::ApplyMove(uint8_t move) {
-    game.DoMove(move);
+MCTS::~MCTS() {
+    delete root;
 }
 
-uint8_t MCTS::DetermineMove() {
-    auto duration = std::chrono::seconds(10);
+void MCTS::ApplyMove(uint8_t move) {
+    game.DoMove(move);
+    root->Expand();
+    root = root->ApplyMove(move);
+    printf("Tree size: %d\n", root->TreeSize());
+}
+
+uint8_t MCTS::DetermineMove(unsigned int runtime) {
+    auto duration = std::chrono::milliseconds(runtime);
     auto start = std::chrono::steady_clock::now();
     unsigned long iterations = 0;
     while (std::chrono::steady_clock::now() - start < duration) {
@@ -46,10 +55,12 @@ uint8_t MCTS::DetermineMove() {
         promising->BackPropogate(won);
 //            printf("propagated\n\n");
     }
-    printf("Did %lu iterations in %ld seconds, which is %.0f/s\n", iterations, duration.count(), static_cast<float>(iterations) / static_cast<float>(duration.count()));
+    printf("Did %lu iterations in %0.2f seconds, which is %.0f/s\n", iterations,
+           static_cast<float>(duration.count()) / 1000.0,
+           static_cast<float>(iterations) / static_cast<float>(duration.count()) * 1000.0);
+    printf("Tree size: %d\n", root->TreeSize());
 
-    // TODO: Return most promising node
-    return 65;
+    return root->GetBestMove();
 }
 
 std::vector<int8_t> MCTS::GetBoard() {

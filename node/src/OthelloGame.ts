@@ -4,7 +4,7 @@ const { MCTS } = require("bindings")("mcts");
 export interface OthelloGame {
   applyMove(move: number): void;
   getBoard(): Int8Array;
-  determineMove(): Promise<number>;
+  determineMove(runtime?: number): Promise<number>;
   opponentCanMove(): boolean;
 }
 
