@@ -60,17 +60,14 @@ Node::Node(Node *base) {
 Node *Node::SelectPromisingChild() {
     Node *promising = this;
     while (!promising->children.empty()) {
-        // TODO: Use max_element
-        Node *best_child = nullptr;
-        double best_score = INT_MIN;
-        for (auto &child: promising->children) {
-            double score = Node::UctScore(promising->visit_count, child.win_score, child.visit_count);
-            if (score > best_score) {
-                best_score = score;
-                best_child = &child;
-            }
-        }
-        promising = best_child;
+        auto i = std::max_element(promising->children.begin(), promising->children.end(),
+                                  [promising](auto &a, auto &b) {
+                                      return Node::UctScore(promising->visit_count, a.win_score,
+                                                            a.visit_count) <
+                                             Node::UctScore(promising->visit_count, b.win_score,
+                                                            b.visit_count);
+                                  });
+        promising = &(*i);
     }
     return promising;
 }
@@ -188,12 +185,13 @@ Node *Node::ApplyMove(uint8_t i) {
 
 uint8_t Node::GetBestMove() {
 //    for(auto &child : children) printf("Move: %d\tVisit count: %d\n", child.move, child.visit_count);
-    auto iter = std::max_element(children.begin(), children.end(), [](auto &a, auto &b){return a.visit_count < b.visit_count;});
+    auto iter = std::max_element(children.begin(), children.end(),
+                                 [](auto &a, auto &b) { return a.visit_count < b.visit_count; });
     return iter->move;
 }
 
 unsigned int Node::TreeSize() {
     unsigned int size = children.size();
-    for(auto &child : children) size += child.TreeSize();
+    for (auto &child: children) size += child.TreeSize();
     return size;
 }
