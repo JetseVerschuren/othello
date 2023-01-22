@@ -164,8 +164,8 @@ bool Node::PlayRandomGame() {
 //        printf("Move: %d\n", random_move);
         tmp_game.DoMove(random_move);
     }
-    // TODO: Should this be inverted? Too tired to think about it
-    return tmp_game.win();
+
+    return tmp_game.win(game.getMark());
 }
 
 void Node::BackPropogate(bool won) {

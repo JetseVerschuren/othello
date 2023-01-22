@@ -18,16 +18,20 @@ public:
 
     uint64_t GetValidMoves();
 
-    bool win();
+    [[nodiscard]] bool win() const;
+
+    [[nodiscard]] bool win(bool check_mark) const;
+
+    [[nodiscard]] bool getMark() const;
 
 private:
     uint64_t moves_down(uint8_t direction);
 
-    uint64_t moves_up(uint8_t increment);
+    uint64_t moves_up(uint8_t direction);
 
-    uint64_t flips_up(uint64_t move, uint8_t increment);
+    uint64_t flips_up(uint64_t move, uint8_t direction);
 
-    uint64_t flips_down(const uint64_t move, const uint8_t increment);
+    uint64_t flips_down(uint64_t move, uint8_t direction);
 
     uint64_t get_flips(uint8_t move);
 
@@ -75,25 +79,25 @@ so from end piece to empty spot, which means the internal shift is increasing.
 Because it's impossible to enclose pieces to the right from the right edge,
 we use the right edge as separating row.
 */
-uint64_t Othello::moves_down(uint8_t increment) {
+uint64_t Othello::moves_down(uint8_t direction) {
     uint64_t valid = 0;
     uint64_t empty = ~(fields[mark] | fields[!mark]);
-    uint64_t candidates = fields[!mark] & (fields[mark] << increment);
+    uint64_t candidates = fields[!mark] & (fields[mark] << direction);
     while (candidates != 0) {
-        valid |= empty & (candidates << increment) & ~0x0101010101010101;
-        candidates = fields[!mark] & (candidates << increment) & ~0x0101010101010101;
+        valid |= empty & (candidates << direction) & ~0x0101010101010101;
+        candidates = fields[!mark] & (candidates << direction) & ~0x0101010101010101;
     }
     return valid;
 }
 
 // Get all possible moves that increases the index: right, down, down-left, down-right
-uint64_t Othello::moves_up(uint8_t increment) {
+uint64_t Othello::moves_up(uint8_t direction) {
     uint64_t valid = 0;
     uint64_t empty = ~(fields[mark] | fields[!mark]);
-    uint64_t candidates = fields[!mark] & (fields[mark] >> increment);
+    uint64_t candidates = fields[!mark] & (fields[mark] >> direction);
     while (candidates != 0) {
-        valid |= empty & (candidates >> increment) & ~0x8080808080808080;
-        candidates = fields[!mark] & (candidates >> increment) & ~0x8080808080808080;
+        valid |= empty & (candidates >> direction) & ~0x8080808080808080;
+        candidates = fields[!mark] & (candidates >> direction) & ~0x8080808080808080;
     }
     return valid;
 }
@@ -116,32 +120,32 @@ uint64_t Othello::GetValidMoves() {
     return valid;
 }
 
-uint64_t Othello::flips_up(uint64_t move, uint8_t increment) {
-    uint64_t candidates = fields[!mark] & (move << increment);
+uint64_t Othello::flips_up(uint64_t move, uint8_t direction) {
+    uint64_t candidates = fields[!mark] & (move << direction);
     uint64_t empty = ~(fields[mark] | fields[!mark]) | 0x0101010101010101;
     uint64_t flips = candidates;
     while (candidates != 0) {
         // If we hit an empty spot, it's not enclosed,
         // and thus nothing should be flipped
-        if (empty & (candidates << increment)) return 0;
+        if (empty & (candidates << direction)) return 0;
         // If we hit one of our pieces, it's enclosed,
         // and we should return the bits
-        if (fields[mark] & (candidates << increment)) return flips;
+        if (fields[mark] & (candidates << direction)) return flips;
 
-        candidates = fields[!mark] & (candidates << increment);
+        candidates = fields[!mark] & (candidates << direction);
         flips |= candidates;
     }
     return 0;
 }
 
-uint64_t Othello::flips_down(const uint64_t move, const uint8_t increment) {
-    uint64_t candidates = fields[!mark] & (move >> increment);
+uint64_t Othello::flips_down(const uint64_t move, const uint8_t direction) {
+    uint64_t candidates = fields[!mark] & (move >> direction);
     uint64_t empty = ~(fields[mark] | fields[!mark]) | 0x8080808080808080;
     uint64_t flips = candidates;
     while (candidates != 0) {
-        if (empty & (candidates >> increment)) return 0;
-        if (fields[mark] & (candidates >> increment)) return flips;
-        candidates = fields[!mark] & (candidates << increment);
+        if (empty & (candidates >> direction)) return 0;
+        if (fields[mark] & (candidates >> direction)) return flips;
+        candidates = fields[!mark] & (candidates << direction);
         flips |= candidates;
     }
     return 0;
@@ -185,6 +189,15 @@ bool Othello::OpponentCanMove() {
 }
 
 // Return if the current mark has won. A draw is not winning
-bool Othello::win() {
-    return popcount64c(fields[mark]) > popcount64c(fields[!mark]);
+bool Othello::win() const {
+    return win(mark);
+}
+
+// Return if the current mark has won. A draw is not winning
+bool Othello::win(bool check_mark) const {
+    return popcount64c(fields[check_mark]) > popcount64c(fields[!check_mark]);
+}
+
+bool Othello::getMark() const {
+    return mark;
 }
