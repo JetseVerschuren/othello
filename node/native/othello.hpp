@@ -82,7 +82,7 @@ we use the right edge as separating row.
 uint64_t Othello::moves_down(uint8_t direction) {
     uint64_t valid = 0;
     uint64_t empty = ~(fields[mark] | fields[!mark]);
-    uint64_t candidates = fields[!mark] & (fields[mark] << direction);
+    uint64_t candidates = fields[!mark] & (fields[mark] << direction) & ~0x0101010101010101;
     while (candidates != 0) {
         valid |= empty & (candidates << direction) & ~0x0101010101010101;
         candidates = fields[!mark] & (candidates << direction) & ~0x0101010101010101;
@@ -90,11 +90,11 @@ uint64_t Othello::moves_down(uint8_t direction) {
     return valid;
 }
 
-// Get all possible moves that increases the index: right, down, down-left, down-right
+// Get all possible moves that decreases the index: right, down, down-left, down-right
 uint64_t Othello::moves_up(uint8_t direction) {
     uint64_t valid = 0;
     uint64_t empty = ~(fields[mark] | fields[!mark]);
-    uint64_t candidates = fields[!mark] & (fields[mark] >> direction);
+    uint64_t candidates = fields[!mark] & (fields[mark] >> direction) & ~0x8080808080808080;
     while (candidates != 0) {
         valid |= empty & (candidates >> direction) & ~0x8080808080808080;
         candidates = fields[!mark] & (candidates >> direction) & ~0x8080808080808080;
