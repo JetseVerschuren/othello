@@ -1,6 +1,15 @@
 #include <climits>
 #include <cmath>
 #include <algorithm>
+#include <random>
+#include <stdexcept>
+
+int random_number(int limit) {
+    static thread_local std::random_device rd;
+    static thread_local std::minstd_rand generator(rd());
+    std::uniform_int_distribution<int> distribution(0, limit-1);
+    return distribution(generator);
+}
 
 class Node {
 public:
@@ -23,6 +32,8 @@ public:
     uint8_t GetBestMove();
 
     unsigned int TreeSize();
+
+    std::vector<Node> *GetChildren();
 
 private:
     Othello game;
@@ -116,16 +127,15 @@ Node *Node::GetRandomChild() {
     if (children.empty()) {
         return this;
     }
-    // TODO: Use more efficient random number generator
-    int child = rand() % children.size();
+    int child = random_number(children.size());
 //    printf("Selected child: %d\n", child);
     return &children[child];
 }
 
 uint8_t pick_random_move(uint64_t moves) {
     int options = Othello::popcount64c(moves);
-    // Doesn't generate a uniform distribution, but good enough for what we do (I hope)
-    int ith_bit = rand() % options;
+
+    int ith_bit = random_number(options);
 
     for (size_t i = 0; i < 64; i++) {
         if ((moves & 1) && ith_bit-- == 0) return i;
@@ -178,13 +188,14 @@ void Node::BackPropogate(bool won) {
 
 Node *Node::ApplyMove(uint8_t i) {
     auto child = std::find_if(children.begin(), children.end(), [i](auto &node) { return node.move == i; });
+    if (child == children.end()) throw new std::runtime_error("Whoops, invalid move received from server...");
     auto new_root = new Node(&(*child));
     delete this;
     return new_root;
 }
 
 uint8_t Node::GetBestMove() {
-//    for(auto &child : children) printf("Move: %d\tVisit count: %d\n", child.move, child.visit_count);
+    for(auto &child : children) printf("Move: %d\tVisit count: %d\tWin score: %d\n", child.move, child.visit_count, child.win_score);
     auto iter = std::max_element(children.begin(), children.end(),
                                  [](auto &a, auto &b) { return a.visit_count < b.visit_count; });
     return iter->move;
@@ -194,4 +205,8 @@ unsigned int Node::TreeSize() {
     unsigned int size = children.size();
     for (auto &child: children) size += child.TreeSize();
     return size;
+}
+
+std::vector<Node> *Node::GetChildren() {
+    return &children;
 }
