@@ -9,7 +9,7 @@ export class Client {
   private loggedIn = false;
   private ourTurn = false;
   private game: OthelloGame | null = null;
-  private readonly onlineUserInterval: NodeJS.Timer;
+  private onlineUserInterval: NodeJS.Timer | undefined = undefined;
 
   constructor(handler: ClientListener, host: string, port: number, private username: string, private AIRuntime = 0) {
     this.handler = handler;
@@ -25,6 +25,10 @@ export class Client {
       console.log("Connected");
       this.sendCommand("HELLO", "Node c++ hybrid", "CHAT", "RANK");
       handler.setConnection([host, port]);
+      this.onlineUserInterval = setInterval(() => {
+        this.sendCommand("LIST");
+      }, 5000);
+      this.sendCommand("LIST");
     });
 
     this.socket.on("data", (data) => {
