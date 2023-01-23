@@ -48,7 +48,10 @@ export class WebsocketServer implements ClientListener {
         this.client?.sendRaw(data.raw);
         break;
       case "sendChat":
-        this.client?.sendChat(data.message);
+        if(this.client) {
+          this.client.sendChat(data.message);
+          this.receivedChat(this.client.getUsername(), data.message);
+        }
         break;
       case "doMove":
         this.client?.doMove(data.move);
@@ -77,6 +80,7 @@ export class WebsocketServer implements ClientListener {
   }
 
   newGame(opponentUsername: ClientState["opponent"]) {
+    // TODO: Show in UI, also add which color we are
     this.state.opponent = opponentUsername;
     this.state.inQueue = false;
     this.sendState();
