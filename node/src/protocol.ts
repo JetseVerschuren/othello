@@ -22,9 +22,9 @@ export type ClientMessage =
       command: "queue";
     }
   | {
-    command: "ai";
-    runtime: number;
-  };
+      command: "ai";
+      runtime: number;
+    };
 
 export type ClientState = {
   board: number[] | null;

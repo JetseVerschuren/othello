@@ -2,7 +2,12 @@ import express from "express";
 import ws from "ws";
 import { Client } from "./Client";
 import { ClientListener } from "./ClientListener";
-import {ClientMessage, ClientState, defaultClientState, ServerMessage} from "./protocol";
+import {
+  ClientMessage,
+  ClientState,
+  defaultClientState,
+  ServerMessage,
+} from "./protocol";
 
 export class WebsocketServer implements ClientListener {
   private client: Client | null = null;
@@ -42,13 +47,19 @@ export class WebsocketServer implements ClientListener {
     switch (data.command) {
       case "connect":
         console.log(`Connecting to ${data.host}:${data.port}`);
-        this.client = new Client(this, data.host, data.port, data.username, this.state.AIRuntime);
+        this.client = new Client(
+          this,
+          data.host,
+          data.port,
+          data.username,
+          this.state.AIRuntime
+        );
         break;
       case "sendRaw":
         this.client?.sendRaw(data.raw);
         break;
       case "sendChat":
-        if(this.client) {
+        if (this.client) {
           this.client.sendChat(data.message);
           this.receivedChat(this.client.getUsername(), data.message);
         }
@@ -57,7 +68,7 @@ export class WebsocketServer implements ClientListener {
         this.client?.doMove(data.move);
         break;
       case "queue":
-        if(!this.client) return;
+        if (!this.client) return;
         this.client.enqueue();
         this.state.inQueue = !this.state.inQueue;
         this.sendState();

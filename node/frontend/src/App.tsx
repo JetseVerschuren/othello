@@ -1,16 +1,22 @@
-import type {Component} from "solid-js";
+import type { Component } from "solid-js";
 
 import styles from "./App.module.css";
-import {Board} from "./components/Board";
-import {Chat} from "./components/Chat";
+import { Board } from "./components/Board";
+import { Chat } from "./components/Chat";
 import createWebsocket from "@solid-primitives/websocket";
-import {For, JSX, onCleanup, onMount} from "solid-js";
-import {ClientMessage, ClientState, defaultClientState, ServerMessage} from "../../src/protocol";
-import {createStore} from "solid-js/store";
+import { For, JSX, onCleanup, onMount } from "solid-js";
+import {
+  ClientMessage,
+  ClientState,
+  defaultClientState,
+  ServerMessage,
+} from "../../src/protocol";
+import { createStore } from "solid-js/store";
 
 const App: Component = () => {
   // const [clientState, setClientState] = useState();
-  const [clientState, setClientState] = createStore<ClientState>(defaultClientState);
+  const [clientState, setClientState] =
+    createStore<ClientState>(defaultClientState);
   const [chats, setChats] = createStore<Chat[]>([]);
 
   const addChat = (sender: string, message: string) => {
@@ -61,23 +67,28 @@ const App: Component = () => {
     const message = input.value;
     input.value = "";
 
-    if (!message.startsWith("/")) sendMessage({command: "sendChat", message});
+    if (!message.startsWith("/")) sendMessage({ command: "sendChat", message });
 
     const [command, ...args] = message.split(" ");
     switch (command) {
       case "/connect":
-        sendMessage({command: "connect", host: "130.89.253.64", port: 44444, username: args[0] ?? "Jetse test"});
+        sendMessage({
+          command: "connect",
+          host: "130.89.253.64",
+          port: 44444,
+          username: args[0] ?? "Jetse test",
+        });
         break;
       case "/raw":
-        sendMessage({command: "sendRaw", raw: args.join(" ")});
+        sendMessage({ command: "sendRaw", raw: args.join(" ") });
         break;
       case "/queue":
-        sendMessage({command: "queue"});
+        sendMessage({ command: "queue" });
         break;
       case "/ai": {
         const runtime = parseInt(args[0] ?? "");
         if (isNaN(runtime)) addChat("", "Invalid AI runtime");
-        else sendMessage({command: "ai", runtime});
+        else sendMessage({ command: "ai", runtime });
         break;
       }
     }
@@ -86,38 +97,45 @@ const App: Component = () => {
   const doMove = (move: number) => {
     console.log(`Clicked field ${move}`);
     if (clientState.board?.[move] !== 0) return console.log("Invalid move");
-    sendMessage({command: "doMove", move});
+    sendMessage({ command: "doMove", move });
   };
 
   return (
     <div class={styles.App}>
       <aside class={styles.aside}>
-        <Board board={clientState.board} onClick={doMove}/>
-        <div style={{"padding-top": "10px"}}>Online clients:</div>
-        <div style={{"flex-grow": 1, overflow: "scroll"}}>
+        <Board board={clientState.board} onClick={doMove} />
+        <div style={{ "padding-top": "10px" }}>Online clients:</div>
+        <div style={{ "flex-grow": 1, overflow: "scroll" }}>
           <ul>
             <For each={clientState.onlineUsers}>
               {(user) => <li>{user}</li>}
             </For>
           </ul>
         </div>
+        <div>{clientState.inQueue ? "Waiting in queue" : "Not in queue"}</div>
         <div>
-          {clientState.inQueue ? "Waiting in queue" : "Not in queue"}
+          AI Runtime:{" "}
+          {clientState.AIRuntime > 0
+            ? `${clientState.AIRuntime}ms`
+            : "Disabled"}
         </div>
         <div>
-          AI Runtime: {clientState.AIRuntime > 0 ? `${clientState.AIRuntime}ms` : "Disabled"}
-        </div>
-        <div>
-          Remote server: {clientState.remoteServer == "" ? "Not connected" : clientState.remoteServer}
+          Remote server:{" "}
+          {clientState.remoteServer == ""
+            ? "Not connected"
+            : clientState.remoteServer}
         </div>
         <div>
           Backend connection:{/* {state()}*/}
-          <div classList={{
-            [styles.statusBubble]: true,
-            [styles.statusRed]: state() == WebSocket.CLOSED || state() == WebSocket.CLOSING,
-            [styles.statusOrange]: state() == WebSocket.CONNECTING,
-            [styles.statusGreen]: state() == WebSocket.OPEN,
-          }}/>
+          <div
+            classList={{
+              [styles.statusBubble]: true,
+              [styles.statusRed]:
+                state() == WebSocket.CLOSED || state() == WebSocket.CLOSING,
+              [styles.statusOrange]: state() == WebSocket.CONNECTING,
+              [styles.statusGreen]: state() == WebSocket.OPEN,
+            }}
+          />
         </div>
       </aside>
 

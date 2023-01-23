@@ -58,21 +58,21 @@
 }
 
 .statusBubble {
-    width: 10px;
-    height: 10px;
-    border-radius: 100%;
-    display: inline-block;
-    margin-left: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+  display: inline-block;
+  margin-left: 8px;
 }
 
 .statusRed {
-    background-color: red;
+  background-color: red;
 }
 
 .statusGreen {
-    background-color: green;
+  background-color: green;
 }
 
 .statusOrange {
-    background-color: orange;
+  background-color: orange;
 }

@@ -1,6 +1,6 @@
 import net from "net";
-import {OthelloGame} from "./OthelloGame";
-import {ClientListener} from "./ClientListener";
+import { OthelloGame } from "./OthelloGame";
+import { ClientListener } from "./ClientListener";
 
 export class Client {
   private buffer = "";
@@ -11,7 +11,13 @@ export class Client {
   private game: OthelloGame | null = null;
   private onlineUserInterval: NodeJS.Timer | undefined = undefined;
 
-  constructor(handler: ClientListener, host: string, port: number, private username: string, private AIRuntime = 0) {
+  constructor(
+    handler: ClientListener,
+    host: string,
+    port: number,
+    private username: string,
+    private AIRuntime = 0
+  ) {
     this.handler = handler;
     this.socket = new net.Socket();
 
@@ -90,14 +96,13 @@ export class Client {
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
         // If there's no valid move for us, and it's our move, skip
-        if(this.ourTurn) {
+        if (this.ourTurn) {
           if (!this.game.getBoard().includes(0)) this.doMove(64);
           else if (this.AIRuntime > 0) {
-            this.game.determineMove(this.AIRuntime)
-              .then(move => {
-                this.doMove(move);
-                this.handler.receivedWhisper("AI", `I chose ${move}`)
-              });
+            this.game.determineMove(this.AIRuntime).then((move) => {
+              this.doMove(move);
+              this.handler.receivedWhisper("AI", `I chose ${move}`);
+            });
           }
         }
         this.sendBoard();
