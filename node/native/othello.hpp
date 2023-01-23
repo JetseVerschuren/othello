@@ -145,7 +145,7 @@ uint64_t Othello::flips_down(const uint64_t move, const uint8_t direction) {
     while (candidates != 0) {
         if (empty & (candidates >> direction)) return 0;
         if (fields[mark] & (candidates >> direction)) return flips;
-        candidates = fields[!mark] & (candidates << direction);
+        candidates = fields[!mark] & (candidates >> direction);
         flips |= candidates;
     }
     return 0;
