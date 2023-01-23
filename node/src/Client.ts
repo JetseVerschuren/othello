@@ -15,11 +15,11 @@ export class Client {
     this.handler = handler;
     this.socket = new net.Socket();
 
-    this.onlineUserInterval = setInterval(() => {
-      this.sendCommand("LIST");
-    }, 5000);
-
-    this.socket.on("close", () => clearInterval(this.onlineUserInterval));
+    this.socket.on("close", () => {
+      clearInterval(this.onlineUserInterval);
+      console.log("Disconnected from Othello server");
+      handler.setConnection(null);
+    });
 
     this.socket.connect(port, host, () => {
       console.log("Connected");
@@ -85,17 +85,20 @@ export class Client {
           break;
         }
         const move = parseInt(args[0]);
+        console.log(`Received move: ${move}`);
         // TODO: Verify move is valid
         this.game.applyMove(move);
         this.ourTurn = !this.ourTurn;
-        // If there's no valid move for us, and there's no valid move for the opponent, skip
-        if (!this.game.getBoard().includes(0) && !this.game.opponentCanMove()) this.doMove(64);
-        if (this.ourTurn && this.AIRuntime > 0) {
-          this.game.determineMove(this.AIRuntime)
-            .then(move => {
-              this.doMove(move);
-              this.handler.receivedWhisper("AI", `I chose ${move}`)
-            });
+        // If there's no valid move for us, and it's our move, skip
+        if(this.ourTurn) {
+          if (!this.game.getBoard().includes(0)) this.doMove(64);
+          else if (this.AIRuntime > 0) {
+            this.game.determineMove(this.AIRuntime)
+              .then(move => {
+                this.doMove(move);
+                this.handler.receivedWhisper("AI", `I chose ${move}`)
+              });
+          }
         }
         this.sendBoard();
         break;
@@ -132,6 +135,7 @@ export class Client {
 
   public doMove(move: number) {
     // TODO: Check valid move
+    console.log(`Sending move ${move}`);
     this.sendCommand("MOVE", move);
   }
 
@@ -141,5 +145,9 @@ export class Client {
 
   public setAIRuntime(runtime: number) {
     this.AIRuntime = runtime;
+  }
+
+  public getUsername() {
+    return this.username;
   }
 }
