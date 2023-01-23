@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <vector>
 
 const int8_t directions[4] = {1, 7, 8, 9};
@@ -23,6 +24,8 @@ public:
     [[nodiscard]] bool win(bool check_mark) const;
 
     [[nodiscard]] bool getMark() const;
+
+    void PrintBoard();
 
 private:
     uint64_t moves_down(uint8_t direction);
@@ -59,6 +62,25 @@ std::vector<int8_t> Othello::ToVector() {
     }
     return out;
 }
+
+void Othello::PrintBoard() {
+    uint64_t a = fields[0], b = fields[1];
+    if (a & b) printf("Warning, boards overlap!");
+    printf("╔════════╗\n");
+    for (size_t x = 0; x < 8; x++) {
+        printf("║");
+        for (size_t y = 0; y < 8; y++) {
+            if (a & 1) printf("X");
+            else if (b & 1) printf("O");
+            else printf(".");
+            a >>= 1;
+            b >>= 1;
+        }
+        printf("║\n");
+    }
+    printf("╚════════╝\n");
+}
+
 
 // https://en.wikipedia.org/wiki/Hamming_weight
 int Othello::popcount64c(uint64_t x) {
