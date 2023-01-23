@@ -46,7 +46,7 @@ const App: Component = () => {
     (err) => console.error("Something went wrong with the socket", err),
     [],
     5,
-    1000
+    3000
   );
 
   const sendMessage = (message: ClientMessage) => send(JSON.stringify(message));
